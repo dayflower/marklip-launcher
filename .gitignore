@@ -1,0 +1,32 @@
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+*.xcodeproj
+xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift
+*.swp
+*~.nib
+*.swiftpm
+
+# Build artifacts
+/build/
