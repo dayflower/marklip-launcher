@@ -21,9 +21,7 @@ enum LaunchAgentError: Error {
 }
 
 /// Manages LaunchAgent registration for startup behavior
-@available(macOS, deprecated: 11.0)
 class LaunchAgentManager {
-    // Uses deprecated NotificationManager (see NotificationManager.swift for rationale)
     private let notificationManager: NotificationManager
     private let bundleIdentifier = Constants.bundleIdentifier
     private let launchAgentsDir = FileManager.default.homeDirectoryForCurrentUser
@@ -64,6 +62,8 @@ class LaunchAgentManager {
 
     private func performRegistration() throws {
         // Get executable path
+        // For App Bundle: ~/Applications/marklip-launcher.app/Contents/MacOS/marklip-launcher
+        // For CLI executable (legacy): /usr/local/bin/marklip-launcher
         guard let executablePath = ProcessInfo.processInfo.arguments.first else {
             throw LaunchAgentError.executablePathNotFound
         }

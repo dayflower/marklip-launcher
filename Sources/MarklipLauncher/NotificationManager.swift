@@ -1,40 +1,78 @@
 import Foundation
+import UserNotifications
 
-/// NotificationManager provides system notifications using the legacy NSUserNotification API.
+/// NotificationManager provides system notifications using the modern UserNotifications framework.
 ///
 /// ARCHITECTURAL DECISION:
-/// This class intentionally uses NSUserNotification (deprecated since macOS 11.0)
-/// instead of the modern UserNotifications framework.
+/// This class uses the UserNotifications framework introduced in macOS 10.14.
+/// The application is now distributed as a .app bundle, allowing use of modern notification APIs.
 ///
-/// RATIONALE:
-/// The UserNotifications framework requires the application to be distributed as a .app bundle
-/// with proper code signing and entitlements. This application runs as a standalone CLI executable
-/// (without an app bundle) and does not require code signing. Using NSUserNotification allows
-/// the application to display notifications without these requirements.
+/// PERMISSION HANDLING:
+/// The first time a notification is shown, the system prompts for user permission.
+/// If permission is denied, notifications will fail silently but the application will continue to function.
 ///
-/// MAINTENANCE NOTE:
-/// Future macOS versions may completely remove NSUserNotification support. At that point,
-/// either the application architecture must be changed to use a .app bundle, or an alternative
-/// notification mechanism must be implemented.
-@available(macOS, deprecated: 11.0, message: "Use UserNotifications framework instead; we intentionally use NSUserNotification to avoid code signing requirements for CLI executable")
-class NotificationManager {
+/// REQUIREMENTS:
+/// - Application must be packaged as .app bundle
+/// - No special entitlements required for local notifications
+/// - Ad-hoc code signing is sufficient for personal use
+class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
+    private let center = UNUserNotificationCenter.current()
+    private var permissionGranted = false
+
+    override init() {
+        super.init()
+        center.delegate = self
+        requestPermission()
+    }
+
+    /// Request notification permission (asynchronous)
+    private func requestPermission() {
+        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+            if let error = error {
+                print("Notification permission error: \(error)")
+            }
+            self.permissionGranted = granted
+        }
+    }
+
     /// Show a success notification
     func showSuccess(_ message: String) {
-        let notification = NSUserNotification()
-        notification.title = Constants.applicationName
-        notification.informativeText = message
-        notification.soundName = NSUserNotificationDefaultSoundName
-
-        NSUserNotificationCenter.default.deliver(notification)
+        showNotification(title: Constants.applicationName, body: message)
     }
 
     /// Show an error notification
     func showError(_ message: String) {
-        let notification = NSUserNotification()
-        notification.title = "\(Constants.applicationName) Error"
-        notification.informativeText = message
-        notification.soundName = NSUserNotificationDefaultSoundName
+        showNotification(title: "\(Constants.applicationName) Error", body: message)
+    }
 
-        NSUserNotificationCenter.default.deliver(notification)
+    private func showNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: nil  // Show immediately
+        )
+
+        center.add(request) { error in
+            if let error = error {
+                print("Notification delivery error: \(error)")
+            }
+        }
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+
+    /// Handle notifications when app is in foreground
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        // Show notifications even when app is active (status bar app is always "active")
+        completionHandler([.banner, .sound])
     }
 }

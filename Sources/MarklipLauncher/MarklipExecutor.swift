@@ -4,9 +4,7 @@ import Foundation
 /// Note: The marklip command is invoked with --notify flag and handles
 /// its own success/failure notifications. This executor only notifies
 /// when the command is not found or execution fails at the process level.
-@available(macOS, deprecated: 11.0)
 class MarklipExecutor {
-    // Uses deprecated NotificationManager (see NotificationManager.swift for rationale)
     private let notificationManager: NotificationManager
 
     init(notificationManager: NotificationManager) {

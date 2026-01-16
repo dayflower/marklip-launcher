@@ -1,10 +1,8 @@
 import AppKit
 
 /// Manages the status bar menu and user interactions
-@available(macOS, deprecated: 11.0)
 class StatusBarController: NSObject, NSMenuDelegate {
     private var statusItem: NSStatusItem!
-    // Uses deprecated classes (see NotificationManager.swift for rationale)
     private let marklipExecutor: MarklipExecutor
     private let launchAgentManager: LaunchAgentManager
 

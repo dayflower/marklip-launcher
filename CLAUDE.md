@@ -7,32 +7,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 marklip-launcher is a macOS status bar application written in Swift that provides a GUI interface for the [marklip](https://github.com/dayflower/marklip) command-line tool. It enables clipboard-based Markdown/HTML conversion through a system tray icon.
 
 **Key characteristics:**
-- Standalone CLI executable (not an App bundle)
+- macOS App Bundle format (`.app`)
 - Uses Swift Package Manager (no Xcode required)
-- macOS 12.0+ required
-- Built with deprecated `NSUserNotification` APIs (works without code signing)
+- macOS 13.0+ required
+- Uses modern `UserNotifications` framework
+- Ad-hoc code signing (no Developer ID required)
 - Depends on external `marklip` command (installed via Homebrew)
 
 ## Build Commands
 
 ```bash
-# Build release version
+# Build release App Bundle (with ad-hoc signing)
 make build
-# or: swift build -c release
+# Creates: .build/release/marklip-launcher.app
+
+# Install to ~/Applications
+make install
+
+# Run the app
+make run
+# or: open .build/release/marklip-launcher.app
 
 # Build and run debug version
 make debug
-# or: swift build && .build/debug/marklip-launcher
 
-# Install to /usr/local/bin
-make install
-
-# Uninstall
+# Uninstall from ~/Applications
 make uninstall
 
 # Clean build artifacts
 make clean
-# or: swift package clean
 ```
 
 ## Architecture
@@ -58,12 +61,23 @@ main.swift
 - **StatusBarController**: Builds status bar menu and handles user interactions
 - **MarklipExecutor**: Executes marklip commands via Process and reports results via notifications
 - **LaunchAgentManager**: Creates/removes LaunchAgent plist files in `~/Library/LaunchAgents/`
-- **NotificationManager**: Wrapper around deprecated NSUserNotification APIs
+- **NotificationManager**: Uses modern UserNotifications framework with permission handling
 - **Constants**: Application-wide constants (bundle ID, app name, command name)
 
-### Info.plist Embedding
+### App Bundle Structure
 
-The application uses linker flags to embed Info.plist directly into the executable binary (see [Package.swift:19-25](Package.swift#L19-L25)). This allows `LSUIElement` to work in a CLI executable format without requiring an App bundle structure.
+The application is built as a standard macOS App Bundle:
+
+```
+marklip-launcher.app/
+└── Contents/
+    ├── MacOS/
+    │   └── marklip-launcher      (executable)
+    ├── Resources/                 (for future assets)
+    └── Info.plist                 (bundle metadata)
+```
+
+The build process uses `Scripts/bundle-app.sh` to package the Swift-built executable into this structure, followed by ad-hoc code signing.
 
 ## External Dependencies
 
@@ -96,28 +110,26 @@ All commands follow the same pattern:
 
 When registering as a startup item, the application:
 1. Creates `~/Library/LaunchAgents/com.example.dayflower.marklipLauncher.plist`
-2. Uses the absolute path from `ProcessInfo.processInfo.arguments.first`
+2. Uses the absolute path from `ProcessInfo.processInfo.arguments.first` (e.g., `~/Applications/marklip-launcher.app/Contents/MacOS/marklip-launcher`)
 3. Loads via `launchctl load`
 
-**Critical**: If the executable is moved after registration, the LaunchAgent will fail. Users must unregister and re-register.
+**Note**: For App Bundles, the path points to the executable inside the bundle. Moving the entire `.app` bundle requires unregistering and re-registering.
 
 ## Technical Constraints
 
 - **No Xcode**: Project uses Swift Package Manager exclusively
-- **Deprecated APIs**: Uses `NSUserNotification` (deprecated since macOS 11) instead of UserNotifications framework to avoid code signing requirements
-- **CLI executable format**: Not a .app bundle, runs as a standalone binary
+- **App Bundle format**: Standard macOS `.app` bundle structure
+- **Modern APIs**: Uses `UserNotifications` framework (requires macOS 13.0+)
+- **Ad-hoc signing**: No Developer ID required for personal use
 - **Process-based IPC**: All marklip interaction via Process spawning (no library integration)
 
-## Deprecation Warning Suppression
+## Notification Permissions
 
-The application uses `NSUserNotification` (deprecated since macOS 11.0) and intentionally suppresses its deprecation warnings. This is necessary because:
+The application uses the UserNotifications framework, which requires user permission:
 
-1. The application runs as a CLI executable without an .app bundle
-2. UserNotifications framework requires code signing and entitlements
-3. NSUserNotification allows notifications without these requirements
+1. On first launch, the system prompts for notification permission
+2. If permission is denied, notifications fail silently but the app continues to function
+3. Users can re-enable permissions in System Settings > Notifications
+4. No special entitlements are required for local notifications
 
-Deprecation warnings are suppressed using `@available` attributes at:
-- NotificationManager class definition
-- Usage points in AppDelegate, MarklipExecutor, LaunchAgentManager
-
-This design is intentional and documented to guide future maintainers. If future macOS versions remove NSUserNotification entirely, the application architecture will need to be reconsidered (either migrate to .app bundle + code signing, or use alternative notification mechanisms).
+The NotificationManager implements `UNUserNotificationCenterDelegate` to handle foreground notifications (important for status bar apps that are always "active").
