@@ -7,12 +7,23 @@ import Foundation
 class MarklipExecutor {
     private let notificationManager: NotificationManager
 
+    // Cache marklip path (lazy evaluation)
+    private var cachedMarklipPath: String?
+    private var pathLookupAttempted = false
+
     init(notificationManager: NotificationManager) {
         self.notificationManager = notificationManager
     }
 
-    /// Find the marklip command path
+    /// Find the marklip command path (cached after first lookup)
     func findMarklipPath() -> String? {
+        // Return cached result if already attempted
+        if pathLookupAttempted {
+            return cachedMarklipPath
+        }
+
+        pathLookupAttempted = true
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
         process.arguments = [Constants.marklipCommand]
@@ -29,7 +40,8 @@ class MarklipExecutor {
             }
 
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            cachedMarklipPath = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return cachedMarklipPath
         } catch {
             return nil
         }
@@ -59,5 +71,11 @@ class MarklipExecutor {
             // Only notify on process-level failures (e.g., executable not found, permission denied)
             notificationManager.showError("Failed to execute marklip: \(error.localizedDescription)")
         }
+    }
+
+    /// Invalidate cached path (useful for testing or when marklip installation changes)
+    func invalidatePathCache() {
+        cachedMarklipPath = nil
+        pathLookupAttempted = false
     }
 }
