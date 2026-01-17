@@ -22,6 +22,52 @@ A macOS status bar application that integrates with the [marklip](https://github
 brew install dayflower/tap/marklip
 ```
 
+## Installation
+
+### Option 1: Download from GitHub Releases (Recommended)
+
+1. **Download the latest release**
+
+   Visit the [Releases page](https://github.com/dayflower/marklip-launcher/releases) and download the latest `Marklip-Launcher-x.x.x.zip`.
+
+2. **Verify the download (optional)**
+
+   ```bash
+   shasum -a 256 -c Marklip-Launcher-x.x.x.zip.sha256
+   ```
+
+3. **Extract the archive**
+
+   Double-click the zip file or use:
+   ```bash
+   unzip Marklip-Launcher-x.x.x.zip
+   ```
+
+4. **Remove quarantine attributes**
+
+   **IMPORTANT**: This step is required because the app uses ad-hoc code signing:
+   ```bash
+   xattr -cr "Marklip Launcher.app"
+   ```
+
+   **Why is this needed?** macOS Gatekeeper applies quarantine attributes to downloaded files for security. Since this app is ad-hoc signed (no Apple Developer ID), you need to manually remove these attributes. Only do this for apps from trusted sources.
+
+5. **Move to Applications folder**
+
+   ```bash
+   mv "Marklip Launcher.app" ~/Applications/
+   ```
+
+6. **Run the application**
+
+   ```bash
+   open ~/Applications/Marklip\ Launcher.app
+   ```
+
+### Option 2: Build from Source
+
+See the [Building](#building) section below.
+
 ## Building
 
 ### Build from source
@@ -38,7 +84,7 @@ This will create a release App Bundle at `.build/release/Marklip Launcher.app`.
 make debug
 ```
 
-## Installation
+## Installing from Source Build
 
 ### Install to ~/Applications
 
