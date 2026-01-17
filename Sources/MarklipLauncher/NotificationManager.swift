@@ -28,7 +28,7 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     /// Request notification permission (asynchronous)
     private func requestPermission() {
         center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if let error = error {
+            if let error {
                 print("Notification permission error: \(error)")
             }
             self.permissionGranted = granted
@@ -54,11 +54,11 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         let request = UNNotificationRequest(
             identifier: UUID().uuidString,
             content: content,
-            trigger: nil  // Show immediately
+            trigger: nil, // Show immediately
         )
 
         center.add(request) { error in
-            if let error = error {
+            if let error {
                 print("Notification delivery error: \(error)")
             }
         }
@@ -68,9 +68,9 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
 
     /// Handle notifications when app is in foreground
     func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+        _: UNUserNotificationCenter,
+        willPresent _: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void,
     ) {
         // Show notifications even when app is active (status bar app is always "active")
         completionHandler([.banner, .sound])
