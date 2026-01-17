@@ -1,4 +1,4 @@
-# marklip-launcher
+# Marklip Launcher
 
 A macOS status bar application that integrates with the [marklip](https://github.com/dayflower/marklip) command-line tool for clipboard-based Markdown/HTML conversion.
 
@@ -30,7 +30,7 @@ brew install dayflower/tap/marklip
 make build
 ```
 
-This will create a release build at `.build/release/marklip-launcher`.
+This will create a release App Bundle at `.build/release/Marklip Launcher.app`.
 
 ### Debug build
 
@@ -40,13 +40,13 @@ make debug
 
 ## Installation
 
-### Install to /usr/local/bin
+### Install to ~/Applications
 
 ```bash
 make install
 ```
 
-This will copy the executable to `/usr/local/bin/marklip-launcher`.
+This will install the App Bundle to `~/Applications/Marklip Launcher.app`.
 
 ### Uninstall
 
@@ -59,13 +59,19 @@ make uninstall
 ### Running the application
 
 ```bash
-marklip-launcher
+make run
 ```
 
 Or if installed:
 
 ```bash
-/usr/local/bin/marklip-launcher
+open ~/Applications/Marklip\ Launcher.app
+```
+
+Or directly run the executable:
+
+```bash
+~/Applications/Marklip\ Launcher.app/Contents/MacOS/marklip-launcher
 ```
 
 The application will appear in your status bar with a 📋 icon.
@@ -90,7 +96,7 @@ The application will appear in your status bar with a 📋 icon.
 
 ## LaunchAgent Registration
 
-To make marklip-launcher start automatically when you log in:
+To make Marklip Launcher start automatically when you log in:
 
 1. Click the status bar icon
 2. Select **Configuration → Register as Startup Item**
@@ -103,7 +109,34 @@ To unregister:
 1. Click the status bar icon
 2. Select **Configuration → Unregister as Startup Item**
 
-**Note**: The LaunchAgent stores the absolute path to the executable. If you move the executable after registration, you'll need to unregister and re-register.
+**Note**: The LaunchAgent stores the absolute path to the App Bundle's executable. If you move the `.app` bundle after registration, you'll need to unregister and re-register.
+
+## Migrating from marklip-launcher
+
+If you previously installed `marklip-launcher.app` and registered it as a startup item, follow these steps to migrate to `Marklip Launcher.app`:
+
+1. **Unregister the old LaunchAgent**:
+   ```bash
+   launchctl unload ~/Library/LaunchAgents/com.example.dayflower.marklipLauncher.plist
+   rm ~/Library/LaunchAgents/com.example.dayflower.marklipLauncher.plist
+   ```
+
+2. **Remove the old app**:
+   ```bash
+   rm -rf ~/Applications/marklip-launcher.app
+   ```
+
+3. **Clean and install the new version**:
+   ```bash
+   make clean
+   make install
+   ```
+
+4. **Launch and re-register**:
+   ```bash
+   open ~/Applications/Marklip\ Launcher.app
+   # Then select: Configuration > Register as Startup Item
+   ```
 
 ## Troubleshooting
 

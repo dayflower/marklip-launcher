@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-marklip-launcher is a macOS status bar application written in Swift that provides a GUI interface for the [marklip](https://github.com/dayflower/marklip) command-line tool. It enables clipboard-based Markdown/HTML conversion through a system tray icon.
+Marklip Launcher is a macOS status bar application written in Swift that provides a GUI interface for the [marklip](https://github.com/dayflower/marklip) command-line tool. It enables clipboard-based Markdown/HTML conversion through a system tray icon.
 
 **Key characteristics:**
 - macOS App Bundle format (`.app`)
@@ -19,14 +19,14 @@ marklip-launcher is a macOS status bar application written in Swift that provide
 ```bash
 # Build release App Bundle (with ad-hoc signing)
 make build
-# Creates: .build/release/marklip-launcher.app
+# Creates: .build/release/Marklip Launcher.app
 
 # Install to ~/Applications
 make install
 
 # Run the app
 make run
-# or: open .build/release/marklip-launcher.app
+# or: open .build/release/Marklip\ Launcher.app
 
 # Build and run debug version
 make debug
@@ -69,7 +69,7 @@ main.swift
 The application is built as a standard macOS App Bundle:
 
 ```
-marklip-launcher.app/
+Marklip Launcher.app/
 └── Contents/
     ├── MacOS/
     │   └── marklip-launcher      (executable)
@@ -113,7 +113,7 @@ When registering as a startup item, the application:
 2. Uses the absolute path from `ProcessInfo.processInfo.arguments.first` (e.g., `~/Applications/marklip-launcher.app/Contents/MacOS/marklip-launcher`)
 3. Loads via `launchctl load`
 
-**Note**: For App Bundles, the path points to the executable inside the bundle. Moving the entire `.app` bundle requires unregistering and re-registering.
+**Note**: For App Bundles, the path points to the executable inside the bundle (e.g., `~/Applications/Marklip Launcher.app/Contents/MacOS/marklip-launcher`). Moving the entire `.app` bundle requires unregistering and re-registering.
 
 ## Technical Constraints
 
