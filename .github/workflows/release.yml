@@ -100,3 +100,19 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew-cask:
+    name: Update Homebrew Cask
+    needs: build-and-release
+    runs-on: macos-latest
+
+    steps:
+      - name: Wait for GitHub Release to propagate
+        run: sleep 30
+
+      - name: Update cask via Homebrew
+        uses: Homebrew/actions/bump-packages@master
+        with:
+          token: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+          casks: dayflower/tap/marklip-launcher
+          fork: false

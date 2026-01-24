@@ -24,7 +24,21 @@ brew install dayflower/tap/marklip
 
 ## Installation
 
-### Option 1: Download from GitHub Releases (Recommended)
+### Option 1: Install via Homebrew (Recommended)
+
+```bash
+brew install --cask dayflower/tap/marklip-launcher
+```
+
+After installation, remove quarantine attributes:
+
+```bash
+xattr -cr "/Applications/Marklip Launcher.app"
+```
+
+This is required because the app uses ad-hoc code signing (no Apple Developer ID).
+
+### Option 2: Download from GitHub Releases
 
 1. **Download the latest release**
 
@@ -66,7 +80,7 @@ brew install dayflower/tap/marklip
    open ~/Applications/Marklip\ Launcher.app
    ```
 
-### Option 2: Build from Source
+### Option 3: Build from Source
 
 See the [Building](#building) section below.
 
