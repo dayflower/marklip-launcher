@@ -39,6 +39,7 @@ brew install dayflower/tap/marklip
 3. **Extract the archive**
 
    Double-click the zip file or use:
+
    ```bash
    unzip Marklip-Launcher-x.x.x.zip
    ```
@@ -46,6 +47,7 @@ brew install dayflower/tap/marklip
 4. **Remove quarantine attributes**
 
    **IMPORTANT**: This step is required because the app uses ad-hoc code signing:
+
    ```bash
    xattr -cr "Marklip Launcher.app"
    ```
@@ -157,33 +159,6 @@ To unregister:
 
 **Note**: The LaunchAgent stores the absolute path to the App Bundle's executable. If you move the `.app` bundle after registration, you'll need to unregister and re-register.
 
-## Migrating from marklip-launcher
-
-If you previously installed `marklip-launcher.app` and registered it as a startup item, follow these steps to migrate to `Marklip Launcher.app`:
-
-1. **Unregister the old LaunchAgent**:
-   ```bash
-   launchctl unload ~/Library/LaunchAgents/com.example.dayflower.marklipLauncher.plist
-   rm ~/Library/LaunchAgents/com.example.dayflower.marklipLauncher.plist
-   ```
-
-2. **Remove the old app**:
-   ```bash
-   rm -rf ~/Applications/marklip-launcher.app
-   ```
-
-3. **Clean and install the new version**:
-   ```bash
-   make clean
-   make install
-   ```
-
-4. **Launch and re-register**:
-   ```bash
-   open ~/Applications/Marklip\ Launcher.app
-   # Then select: Configuration > Register as Startup Item
-   ```
-
 ## Troubleshooting
 
 ### "marklip command not found" error
@@ -233,7 +208,7 @@ launchctl load ~/Library/LaunchAgents/com.example.dayflower.marklipLauncher.plis
 
 ## License
 
-See the [marklip](https://github.com/dayflower/marklip) project for license information.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## Contributing
 
