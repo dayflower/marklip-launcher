@@ -110,6 +110,9 @@ jobs:
       - name: Wait for GitHub Release to propagate
         run: sleep 30
 
+      - name: Add Homebrew tap
+        run: brew tap dayflower/tap
+
       - name: Update cask via Homebrew
         uses: Homebrew/actions/bump-packages@master
         with:
