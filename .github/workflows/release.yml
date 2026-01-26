@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: write
@@ -108,7 +108,7 @@ jobs:
 
     steps:
       - name: Wait for GitHub Release to propagate
-        run: sleep 30
+        run: sleep 10
 
       - name: Add Homebrew tap
         run: brew tap dayflower/tap
