@@ -5,7 +5,7 @@
 
 set -e
 
-SOURCE_IMAGE="Sources/MarklipLauncher/AppIcon.icon/Assets/Image.png"
+SOURCE_IMAGE="Sources/MarklipLauncher/AppIcon-1024x1024@1x.png"
 ICONSET_DIR="Resources/AppIcon.iconset"
 
 if [ ! -f "$SOURCE_IMAGE" ]; then
