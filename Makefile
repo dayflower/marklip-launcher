@@ -7,7 +7,10 @@ RELEASE_DIR = $(BUILD_DIR)/release
 BUNDLE_PATH = $(RELEASE_DIR)/$(BUNDLE_NAME)
 INSTALL_DIR = $(HOME)/Applications
 
-.PHONY: build clean install uninstall run debug
+SWIFT_FORMAT = xcrun swift-format
+SWIFT_SOURCES = Sources Package.swift
+
+.PHONY: build clean install uninstall run debug check fix
 
 build:
 	./Scripts/bundle-app.sh
@@ -31,3 +34,9 @@ run: build
 debug:
 	swift build
 	$(BUILD_DIR)/debug/$(PRODUCT_NAME)
+
+check:
+	$(SWIFT_FORMAT) lint --strict --recursive $(SWIFT_SOURCES)
+
+fix:
+	$(SWIFT_FORMAT) format --in-place --recursive $(SWIFT_SOURCES)
