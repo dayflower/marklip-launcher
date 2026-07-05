@@ -2,20 +2,20 @@
 import PackageDescription
 
 let package = Package(
-    name: "MarklipLauncher",
-    platforms: [
-        .macOS(.v13)
-    ],
-    products: [
-        .executable(
-            name: "marklip-launcher",
-            targets: ["MarklipLauncher"]
-        )
-    ],
-    targets: [
-        .executableTarget(
-            name: "MarklipLauncher",
-            dependencies: []
-        )
-    ]
+  name: "MarklipLauncher",
+  platforms: [
+    .macOS(.v13)
+  ],
+  products: [
+    .executable(
+      name: "marklip-launcher",
+      targets: ["MarklipLauncher"]
+    )
+  ],
+  targets: [
+    .executableTarget(
+      name: "MarklipLauncher",
+      dependencies: []
+    )
+  ]
 )

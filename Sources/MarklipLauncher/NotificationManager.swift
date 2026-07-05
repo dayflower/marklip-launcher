@@ -16,63 +16,63 @@ import UserNotifications
 /// - No special entitlements required for local notifications
 /// - Ad-hoc code signing is sufficient for personal use
 class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
-    private let center = UNUserNotificationCenter.current()
-    private var permissionGranted = false
+  private let center = UNUserNotificationCenter.current()
+  private var permissionGranted = false
 
-    override init() {
-        super.init()
-        center.delegate = self
-        requestPermission()
+  override init() {
+    super.init()
+    center.delegate = self
+    requestPermission()
+  }
+
+  /// Request notification permission (asynchronous)
+  private func requestPermission() {
+    center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+      if let error {
+        print("Notification permission error: \(error)")
+      }
+      self.permissionGranted = granted
     }
+  }
 
-    /// Request notification permission (asynchronous)
-    private func requestPermission() {
-        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if let error {
-                print("Notification permission error: \(error)")
-            }
-            self.permissionGranted = granted
-        }
+  /// Show a success notification
+  func showSuccess(_ message: String) {
+    showNotification(title: Constants.applicationName, body: message)
+  }
+
+  /// Show an error notification
+  func showError(_ message: String) {
+    showNotification(title: "\(Constants.applicationName) Error", body: message)
+  }
+
+  private func showNotification(title: String, body: String) {
+    let content = UNMutableNotificationContent()
+    content.title = title
+    content.body = body
+    content.sound = .default
+
+    let request = UNNotificationRequest(
+      identifier: UUID().uuidString,
+      content: content,
+      trigger: nil,  // Show immediately
+    )
+
+    center.add(request) { error in
+      if let error {
+        print("Notification delivery error: \(error)")
+      }
     }
+  }
 
-    /// Show a success notification
-    func showSuccess(_ message: String) {
-        showNotification(title: Constants.applicationName, body: message)
-    }
+  // MARK: - UNUserNotificationCenterDelegate
 
-    /// Show an error notification
-    func showError(_ message: String) {
-        showNotification(title: "\(Constants.applicationName) Error", body: message)
-    }
-
-    private func showNotification(title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil, // Show immediately
-        )
-
-        center.add(request) { error in
-            if let error {
-                print("Notification delivery error: \(error)")
-            }
-        }
-    }
-
-    // MARK: - UNUserNotificationCenterDelegate
-
-    /// Handle notifications when app is in foreground
-    func userNotificationCenter(
-        _: UNUserNotificationCenter,
-        willPresent _: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void,
-    ) {
-        // Show notifications even when app is active (status bar app is always "active")
-        completionHandler([.banner, .sound])
-    }
+  /// Handle notifications when app is in foreground
+  func userNotificationCenter(
+    _: UNUserNotificationCenter,
+    willPresent _: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void,
+  ) {
+    // Show notifications even when app is active (status bar app is always "active")
+    completionHandler([.banner, .sound])
+  }
 }
