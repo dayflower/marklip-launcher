@@ -22,7 +22,5 @@
     <string>Copyright © 2026 dayflower</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
-    <key>CFBundleIconFile</key>
-    <string>AppIcon</string>
 </dict>
 </plist>

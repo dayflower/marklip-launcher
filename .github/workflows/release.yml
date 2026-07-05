@@ -18,7 +18,9 @@ permissions:
 jobs:
   release:
     name: Build and Release macOS App
-    runs-on: macos-latest
+    # macos-26 ships Xcode 26 (actool >= 26), required to compile the
+    # AppIcon.icon (Icon Composer) into Assets.car.
+    runs-on: macos-26
 
     steps:
       - name: Checkout code
@@ -70,6 +72,11 @@ jobs:
 
           if [ ! -f ".build/release/Marklip Launcher.app/Contents/Info.plist" ]; then
             echo "Error: Info.plist not found!"
+            exit 1
+          fi
+
+          if [ ! -f ".build/release/Marklip Launcher.app/Contents/Resources/Assets.car" ]; then
+            echo "Error: Assets.car (app icon) not found!"
             exit 1
           fi
 
