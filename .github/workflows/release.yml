@@ -1,48 +1,62 @@
 name: Release
 
+# When a version-bump PR is merged into main (see Scripts/bump-version.sh),
+# the version in Resources/Info.plist changes. This workflow reads that version,
+# and if a matching tag does not yet exist, it tags, builds the .app, and
+# publishes a GitHub Release. On ordinary pushes (version unchanged) it exits
+# early. Tagging and releasing happen in the same job, so GITHUB_TOKEN is enough
+# (no PAT needed) except for the cross-repo Homebrew tap update.
+
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  release:
     name: Build and Release macOS App
     runs-on: macos-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Show Swift version
         run: swift --version
 
-      - name: Extract version from tag
+      - name: Read version and check tag
         id: version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
-
-      - name: Validate version consistency
-        run: |
-          PLIST_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Resources/Info.plist)
-          TAG_VERSION="${{ steps.version.outputs.version }}"
-          if [ "$PLIST_VERSION" != "$TAG_VERSION" ]; then
-            echo "Error: Version mismatch!"
-            echo "Info.plist version: $PLIST_VERSION"
-            echo "Git tag version: $TAG_VERSION"
-            exit 1
+          VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists; nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Releasing v$VERSION."
+            echo "release=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "Version validation passed: $PLIST_VERSION"
+
+      - name: Create and push tag
+        if: steps.version.outputs.release == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
 
       - name: Build App Bundle
+        if: steps.version.outputs.release == 'true'
         run: make build
 
       - name: Verify build
+        if: steps.version.outputs.release == 'true'
         run: |
           if [ ! -d ".build/release/Marklip Launcher.app" ]; then
             echo "Error: App Bundle not found!"
@@ -62,60 +76,37 @@ jobs:
           echo "Build verification passed"
 
       - name: Create distributable archive
+        if: steps.version.outputs.release == 'true'
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
           cd .build/release
-          zip -r "Marklip-Launcher-${{ steps.version.outputs.version }}.zip" "Marklip Launcher.app"
+          zip -r "Marklip-Launcher-${VERSION}.zip" "Marklip Launcher.app"
           cd ../..
-          mv ".build/release/Marklip-Launcher-${{ steps.version.outputs.version }}.zip" .
-
-      - name: Generate SHA256 checksum
-        run: |
-          shasum -a 256 "Marklip-Launcher-${{ steps.version.outputs.version }}.zip" > "Marklip-Launcher-${{ steps.version.outputs.version }}.zip.sha256"
-          cat "Marklip-Launcher-${{ steps.version.outputs.version }}.zip.sha256"
-
-      - name: Generate release notes
-        id: release_notes
-        run: |
-          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
-
-          if [ -z "$PREVIOUS_TAG" ]; then
-            NOTES="Initial release"
-          else
-            NOTES="$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:'- %s (%h)')"
-          fi
-
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          mv ".build/release/Marklip-Launcher-${VERSION}.zip" .
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "Marklip Launcher v${{ steps.version.outputs.version }}"
-          body: ${{ steps.release_notes.outputs.notes }}
-          files: |
-            Marklip-Launcher-${{ steps.version.outputs.version }}.zip
-            Marklip-Launcher-${{ steps.version.outputs.version }}.zip.sha256
-          draft: false
-          prerelease: false
+        if: steps.version.outputs.release == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v$VERSION" "Marklip-Launcher-${VERSION}.zip" \
+            --title "Marklip Launcher v$VERSION" \
+            --generate-notes
 
-  update-homebrew-cask:
-    name: Update Homebrew Cask
-    needs: build-and-release
-    runs-on: macos-latest
-
-    steps:
-      - name: Wait for GitHub Release to propagate
-        run: sleep 10
-
-      - name: Add Homebrew tap
-        run: brew tap dayflower/tap
-
-      - name: Update cask via Homebrew
-        uses: Homebrew/actions/bump-packages@master
+      - name: Update Homebrew tap
+        if: steps.version.outputs.release == 'true'
+        uses: dayflower/brew-up@v0.1.5
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          token: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
-          casks: dayflower/tap/marklip-launcher
-          fork: false
+          release-tag: v${{ steps.version.outputs.version }}
+          template-path: .github/homebrew/marklip-launcher.rb.mustache
+          output-path: Casks/marklip-launcher.rb
+          asset-map: |
+            default=Marklip-Launcher-{{version}}.zip
+          target-repo: dayflower/homebrew-tap
+          target-branch: main
+          target-repo-token: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+          publish-mode: pr-auto-merge
+          auto-merge-method: squash
